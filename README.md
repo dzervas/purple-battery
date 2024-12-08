@@ -7,3 +7,7 @@ Change execution policy temporarily:
 ```pwsh
 Set-ExecutionPolicy Bypass -Scope Process
 ```
+
+## Remove incorrectly added account
+
+???

@@ -89,7 +89,7 @@ if (-not $OneDriveConfigured) {
     while ($elapsed -lt $maxWaitSeconds) {
         Start-Sleep -Seconds $interval
         $elapsed += $interval
-        if ((Test-Path $OneDriveAccountKey) -and ((Get-ItemProperty $OneDriveAccountKey).AccountStatus -eq "Connected")) {
+        if ((Test-Path $OneDriveAccountKey) -and ($cfgTenantId -eq $tenantID) -and ($cfgStatus -eq "Completed")) {
             Write-Host "OneDrive is now connected!"
             $connected = $true
         }
@@ -100,7 +100,7 @@ if (-not $OneDriveConfigured) {
         Exit 1
     }
 
-    if (Test-Path $OneDriveAccountKey -and (Get-ItemProperty $OneDriveAccountKey).AccountStatus -eq "Connected") {
+    if (Test-Path $OneDriveAccountKey -and $cfgStatus -eq "Completed") {
         Write-Host "OneDrive has been silently configured."
     } else {
         Write-Host "Silent OneDrive configuration failed. The user may be prompted to sign in."
@@ -123,45 +123,22 @@ try {
 Connect-AzureAD
 
 $userAD = Get-AzureADUser -ObjectId $userUPN
-$JoinedGroups = Get-AzureADUserMembership -ObjectId $userAD.ObjectId
+$JoinedGroups = Get-AzureADUserMembership -ObjectId $userAD.ObjectId | Where-Object -Property DisplayName -ne "Disfault"
 if ($JoinedGroups.Count -eq 1) {
     $GroupName = $JoinedGroups.MailNickName
     Write-Host "User is in one group: $GroupName"
 } else {
-    Write-Error "User is not in exactly one group. Found $($JoinedGroups.Count)."
+    $JoinedGroupsList = (echo $JoinedGroups | select -Property DisplayName -ExpandProperty DisplayName) -join ", "
+    Write-Error "User is not in exactly one group. Found $($JoinedGroups.Count) groups: $JoinedGroupsList"
     exit 1
 }
 
 # Replace the tenant placeholder in the SharePoint URL usage:
 $GroupLibraryUrl = "https://$TenantName.sharepoint.com/sites/$GroupName/Shared%20Documents"
 
-if ($GroupLibraryUrl -notmatch "^https://") {
-    Write-Error "Please specify a valid SharePoint library URL."
-    exit 1
-}
-
-Write-Host "Attempting to sync the group folder from: $GroupLibraryUrl"
-Start-Process $OneDriveExe "/url:$GroupLibraryUrl"
-Start-Sleep -Seconds 10
-Write-Host "The group folder should now appear in File Explorer under OneDrive."
-
-# ------------------------------------------------------------------------
-# Add the M365 account to Office apps
-# ------------------------------------------------------------------------
-# Typically, once a user signs into Windows and OneDrive with their M365 account,
-# Office apps (Word, Excel, PowerPoint, Outlook) will pick up the account automatically.
-# To ensure this, you can start an Office app which triggers sign-in synchronization.
-
-$OfficePath = "C:\Program Files\Microsoft Office\root\Office16"
-$WordExe = Join-Path $OfficePath "WINWORD.EXE"
-if (Test-Path $WordExe) {
-    Write-Host "Launching Word to ensure Office account sync..."
-    Start-Process $WordExe
-    Start-Sleep -Seconds 10
-    Write-Host "Closing Word..."
-    Get-Process WINWORD -ErrorAction SilentlyContinue | Stop-Process
-} else {
-    Write-Host "Word not found. Skipping Office account sync step."
-}
+# Needs more data to work
+#$odopenURL = "odopen://sync?userId=$($userAD.ObjectId)&userEmail=$userUPN&isSiteAdmin=0&site=$([URI]::EscapeUriString($userAD.ObjectId))"
+MicrosoftEdge.exe $GroupLibraryUrl
+[System.Windows.MessageBox]::Show("Please sync the group folder from the opened Edge window")
 
 Write-Host "Provisioning steps completed. Please verify OneDrive sync and Office account sign-in."
