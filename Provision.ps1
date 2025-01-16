@@ -34,7 +34,7 @@ try {
 } catch {
     Write-Host "User not signed in. Prompting for Microsoft 365 login..."
     Connect-MgGraph -Scopes "User.Read Files.ReadWrite" -ErrorAction Stop -NoWelcome
-    Get-MgUser -Top 1 | Out-Null
+    Get-MgUser -Top 1 -ErrorAction Stop | Out-Null
     Write-Host "User successfully signed into Microsoft 365."
     $tokenStatus = "NewlySignedIn"
 }
