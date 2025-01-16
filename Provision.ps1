@@ -138,7 +138,9 @@ $GroupLibraryUrl = "https://$TenantName.sharepoint.com/sites/$GroupName/Shared%2
 
 # Needs more data to work
 #$odopenURL = "odopen://sync?userId=$($userAD.ObjectId)&userEmail=$userUPN&isSiteAdmin=0&site=$([URI]::EscapeUriString($userAD.ObjectId))"
-MicrosoftEdge.exe $GroupLibraryUrl
-[System.Windows.MessageBox]::Show("Please sync the group folder from the opened Edge window")
+Write-Host "Navigating to $GroupLibraryUrl"
+[System.Windows.MessageBox]::Show("Please sync the group folder from the opened Edge window and 'add a shortcut to onedrive'")
+#MicrosoftEdge.exe $GroupLibraryUrl
+Start-Process microsoft-edge:$GroupLibraryUrl
 
 Write-Host "Provisioning steps completed. Please verify OneDrive sync and Office account sign-in."
