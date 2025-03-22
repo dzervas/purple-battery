@@ -40,8 +40,6 @@ function Check-DiskSpace {
             }
         }
     }
-    
-    return $true
 }
 
 try {
