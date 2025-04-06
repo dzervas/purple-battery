@@ -1,4 +1,4 @@
-# Dimos Agias runbooks
+# Purple Battery runbooks
 
 ## Provision User machines
 
